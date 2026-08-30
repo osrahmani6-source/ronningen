@@ -3,20 +3,22 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: Rønningen Event Builder API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
-    description: Health operations
+  - name: dashboard
+  - name: catalog
+  - name: quotes
+    description: Event quote configuration and pricing
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,13 +26,244 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+  /dashboard/summary:
+    get:
+      operationId: getDashboardSummary
+      tags: [dashboard]
+      summary: Get internal dashboard summary
+      responses:
+        "200":
+          description: Dashboard summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardSummary"
+  /services:
+    get:
+      operationId: listServices
+      tags: [catalog]
+      summary: List configurable event services
+      responses:
+        "200":
+          description: Service catalog
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Service"
+  /suppliers:
+    get:
+      operationId: listSuppliers
+      tags: [catalog]
+      summary: List suppliers
+      responses:
+        "200":
+          description: Supplier list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Supplier"
+  /quotes:
+    get:
+      operationId: listQuotes
+      tags: [quotes]
+      summary: List recent quotes
+      responses:
+        "200":
+          description: Quote list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Quote"
+    post:
+      operationId: createQuote
+      tags: [quotes]
+      summary: Calculate and save a quote
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/QuoteInput"
+      responses:
+        "201":
+          description: Created quote with frozen calculation details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Quote"
+  /quotes/{quoteId}:
+    get:
+      operationId: getQuote
+      tags: [quotes]
+      summary: Get one quote
+      parameters:
+        - $ref: "#/components/parameters/QuoteId"
+      responses:
+        "200":
+          description: Quote
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Quote"
+        "404":
+          description: Quote not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /quotes/{quoteId}/status:
+    patch:
+      operationId: updateQuoteStatus
+      tags: [quotes]
+      summary: Update quote workflow status
+      parameters:
+        - $ref: "#/components/parameters/QuoteId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/QuoteStatusInput"
+      responses:
+        "200":
+          description: Updated quote
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Quote"
 components:
+  parameters:
+    QuoteId:
+      name: quoteId
+      in: path
+      required: true
+      schema:
+        type: number
   schemas:
     HealthStatus:
       type: object
       properties:
         status:
           type: string
-      required:
-        - status
-
+      required: [status]
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+      required: [error]
+    Service:
+      type: object
+      required: [id, slug, name, category, pricingType, priceNok, costNok, minPriceNok, description, active]
+      properties:
+        id: { type: number }
+        slug: { type: string }
+        name: { type: string }
+        category:
+          type: string
+          enum: [venue, food, transport, activity, service]
+        pricingType:
+          type: string
+          enum: [fixed, per_person, per_hour, per_unit, tiered, manual]
+        priceNok: { type: number }
+        costNok: { type: number }
+        minPriceNok: { type: number }
+        description: { type: string }
+        included:
+          type: array
+          items: { type: string }
+        active: { type: boolean }
+    Supplier:
+      type: object
+      required: [id, name, serviceCount, preferred, active]
+      properties:
+        id: { type: number }
+        name: { type: string }
+        serviceCount: { type: number }
+        preferred: { type: boolean }
+        active: { type: boolean }
+        nextReview:
+          type: ["string", "null"]
+          format: date
+    DashboardSummary:
+      type: object
+      required: [openQuotes, pipelineNok, averageMargin, approvalCount, recentQuotes]
+      properties:
+        openQuotes: { type: number }
+        pipelineNok: { type: number }
+        averageMargin: { type: number }
+        approvalCount: { type: number }
+        recentQuotes:
+          type: array
+          items:
+            $ref: "#/components/schemas/Quote"
+    QuoteItem:
+      type: object
+      required: [id, name, category, quantity, unitPriceNok, totalNok, included]
+      properties:
+        id: { type: number }
+        name: { type: string }
+        category: { type: string }
+        quantity: { type: number }
+        unit: { type: string }
+        unitPriceNok: { type: number }
+        totalNok: { type: number }
+        included: { type: boolean }
+    Quote:
+      type: object
+      required: [id, quoteNumber, company, eventDate, guests, eventType, totalNok, pricePerPersonNok, costNok, marginPercent, marketStatus, status, items, expiryDate]
+      properties:
+        id: { type: number }
+        quoteNumber: { type: string }
+        company: { type: string }
+        contactName:
+          type: ["string", "null"]
+        eventDate: { type: string, format: date }
+        startTime: { type: string }
+        endTime: { type: string }
+        guests: { type: number }
+        eventType: { type: string }
+        totalNok: { type: number }
+        pricePerPersonNok: { type: number }
+        costNok: { type: number }
+        marginPercent: { type: number }
+        marketStatus:
+          type: string
+          enum: [competitive, above_target, manual_review]
+        status:
+          type: string
+          enum: [draft, approval, sent, accepted, declined, changes_requested]
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/QuoteItem"
+        expiryDate: { type: string, format: date }
+        createdAt: { type: string, format: date-time }
+    QuoteInput:
+      type: object
+      required: [company, eventDate, startTime, endTime, guests, eventType, serviceIds]
+      properties:
+        company: { type: string, minLength: 1 }
+        contactName: { type: string }
+        eventDate: { type: string, format: date }
+        startTime: { type: string }
+        endTime: { type: string }
+        guests: { type: number, minimum: 1, maximum: 500 }
+        eventType: { type: string }
+        serviceIds:
+          type: array
+          items: { type: number }
+          minItems: 1
+    QuoteStatusInput:
+      type: object
+      required: [status]
+      properties:
+        status:
+          type: string
+          enum: [draft, approval, sent, accepted, declined, changes_requested]

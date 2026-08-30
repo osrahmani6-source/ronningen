@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/"
+title = "Rønningen Event Builder"
+description = "A Norwegian modular event quote builder for Rønningen Selskapslokale, helping customers and staff configure company events with transparent pricing and margin-safe internal calculations."
+version = "1.0.0"
+id = "artifacts/ronningen-event-builder"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 20620
+
+[services.development]
+run = "pnpm --filter @workspace/ronningen-event-builder run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/ronningen-event-builder", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/ronningen-event-builder/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "20620"
+BASE_PATH = "/"

@@ -1,0 +1,449 @@
+Build a production-ready MVP web app for Rønningen Selskapslokale called “Rønningen Event Builder”.
+
+Goal:
+Create a modular B2B event quote system where customers and staff can build an event by selecting venue, food, transport, activities, and service. The system must automatically calculate a competitive final price while protecting Rønningen’s minimum margin.
+
+Tech:
+
+* Next.js
+* TypeScript
+* Supabase/PostgreSQL
+* Tailwind CSS
+* Supabase Auth
+* Server-side pricing logic
+
+Do not build payments or a full booking calendar yet.
+
+CORE PRODUCT MODEL
+
+Do NOT use fixed Basic / Standard / Premium packages.
+
+Use one modular product:
+
+RØNNINGEN BEDRIFTSDAG
+
+Customer selects:
+
+1. Number of guests
+2. Event type
+3. Venue
+4. Food
+5. Transport
+6. Activities
+7. Extra service
+
+Optional presets can exist:
+
+* Kun lokale
+* Teamdag
+* Komplett dag
+
+These presets only preselect modules. Customers can change everything.
+
+CUSTOMER FLOW
+
+Step 1 — Event
+
+* Date
+* Start/end time
+* Number of guests
+* Event type
+
+Types:
+
+* Meeting
+* Conference
+* Team day
+* Kickoff
+* Summer party
+* Christmas party
+* Company event
+* Workshop
+
+Step 2 — Venue
+
+Automatically calculate venue tier:
+
+1–20 guests:
+NOK 6,900
+
+21–50:
+NOK 9,900
+
+51–100:
+NOK 12,900
+
+101–150:
+From NOK 16,900
+
+150+:
+Manual quote
+
+All prices must be editable in admin.
+
+Venue includes:
+
+* Tables/chairs
+* WiFi
+* Parking
+* Projector
+* Screens
+* Microphone
+* Basic technical equipment
+
+Step 3 — Food
+
+Options:
+
+* No food
+* Customer arranges own food
+* Simple food: from NOK 395/person
+* Buffet/tapas: from NOK 595/person
+* Dinner: from NOK 795/person
+
+Food is supplied by external partners.
+
+Customers may bring their own drinks when agreed with Rønningen.
+
+Step 4 — Transport
+
+Options:
+
+* No transport
+* Drammen round trip: from NOK 8,900
+* Oslo round trip: from NOK 14,900
+* Custom pickup: manual price
+
+Transport suppliers must have:
+
+* Cost price
+* Sale price
+* Capacity
+* Valid date range
+
+Automatically calculate number of buses required.
+
+Step 5 — Activities and service
+
+Free activity access:
+Included or configurable.
+
+Activities may include:
+
+* Shuffleboard
+* Table tennis
+* Air hockey
+* Dart
+* Foosball
+* Football
+
+Team Challenge:
+From NOK 299/person
+Minimum configurable.
+
+Lavo and fire:
+From NOK 3,900
+
+Event service:
+From NOK 4,900
+
+Event service may include:
+
+* Setup
+* Coordination
+* Supplier communication
+* Basic event staffing
+
+Extra services can also include:
+
+* Waiters
+* Table setup
+* Sound/light
+* DJ
+* Extra setup
+
+PRICE SUMMARY
+
+Show a sticky summary during the customer flow.
+
+Example:
+
+DERES BEDRIFTSDAG
+
+50 personer
+
+Lokale            9,900
+Tapas             29,750
+Transport Oslo    14,900
+Team Challenge    14,950
+Gjennomføring      4,900
+
+Total:
+74,400 NOK
+
+Price per person:
+1,488 NOK
+
+Show:
+“Estimert pris. Endelig pris bekreftes i tilbudet.”
+
+Never show customers:
+
+* Supplier costs
+* Internal costs
+* Margin
+* Minimum price
+* Internal discounts
+
+PRICING ENGINE
+
+Every service must have:
+
+* Supplier/internal cost
+* Normal sale price
+* Minimum sale price
+* Pricing type
+* Minimum quantity
+* Maximum quantity
+* Margin target
+* Validity dates
+
+Pricing types:
+
+* fixed
+* per_person
+* per_hour
+* per_unit
+* tiered
+* manual
+
+The pricing engine must:
+
+1. Calculate list price
+2. Calculate supplier/direct cost
+3. Apply volume rules
+4. Apply approved combination discounts
+5. Check minimum margin
+6. Calculate price per person
+7. Compare price against configurable market target
+8. Require manual approval if price or margin falls outside allowed limits
+
+Never automatically reduce the price below the minimum profitable level.
+
+MARGIN RULES
+
+Admin must configure:
+
+* Target margin
+* Minimum margin
+* Warning margin
+
+Default example:
+
+* Green: 30%+
+* Yellow: 20–29.9%
+* Red: below 20%
+
+Employees cannot send a red-margin quote without admin approval.
+
+When discounts are needed, discount high-margin services first:
+
+1. Internal activities
+2. Lavo
+3. Event service/setup
+4. Venue
+5. Catering
+6. Transport
+
+SUPPLIERS
+
+Create supplier management.
+
+Each supplier can have several services and price versions.
+
+Store:
+
+* Supplier
+* Service
+* Cost
+* Cost per person
+* Delivery charge
+* Capacity
+* Minimum guests
+* Valid from/to
+* Preferred supplier
+* Active status
+
+Do not overwrite old supplier prices.
+
+New supplier prices affect new quotes only.
+
+OLD QUOTES MUST NEVER CHANGE.
+
+ADMIN PANEL
+
+Build:
+
+* Dashboard
+* Quotes
+* Services
+* Suppliers
+* Supplier prices
+* Price rules
+* Market targets
+* Approvals
+* Users
+* Audit log
+
+Admin can:
+
+* Change prices
+* Change supplier costs
+* Change margins
+* Add services
+* Disable services
+* Approve discounts
+* See profitability
+
+EMPLOYEE QUOTE BUILDER
+
+Employees can:
+
+* Create customer
+* Create event
+* Select modules
+* Calculate quote
+* Save draft
+* See final price
+* See price per person
+* See internal cost
+* See margin
+* Request approval
+* Send approved quote
+
+Internal summary example:
+
+SALE:
+74,400 NOK
+
+COST:
+44,000 NOK
+
+CONTRIBUTION:
+30,400 NOK
+
+MARGIN:
+40.9%
+
+MARKET:
+Competitive
+
+STATUS:
+Can send
+
+CUSTOMER QUOTE
+
+Customer-facing quote should show:
+
+* Company/customer
+* Date
+* Guest count
+* Selected services
+* Total
+* Price/person
+* What is included
+* Quote expiry
+
+Actions:
+
+* Accept
+* Decline
+* Request changes
+
+DATABASE
+
+Create at minimum:
+
+profiles
+services
+service_prices
+suppliers
+supplier_prices
+pricing_rules
+market_targets
+quotes
+quote_items
+approval_requests
+audit_log
+
+All money must be stored as integer NOK øre.
+
+Example:
+595 NOK = 59500
+
+When a quote is sent, freeze all quote item names, prices, costs, discounts, and calculation details so later price changes never affect the old quote.
+
+ROLES
+
+Use:
+
+* admin
+* sales
+* operations
+* customer
+
+Use Supabase Row Level Security.
+
+Customer must never access internal costs or margins.
+
+DESIGN
+
+Language:
+Norwegian Bokmål
+
+Style:
+Premium Norwegian event venue.
+
+Use:
+
+* Clean white/warm background
+* Dark text
+* Natural muted accents
+* Rounded cards
+* Simple layouts
+* Large readable typography
+* Mobile-first customer builder
+
+Avoid:
+
+* Neon SaaS design
+* Excessive gradients
+* Complex dashboards
+* Too much technical information
+
+IMPORTANT
+
+Build the MVP around this principle:
+
+Customer experience:
+Simple modular event builder.
+
+Internal system:
+Supplier costs + pricing rules + margin protection + competitive pricing.
+
+Do not hardcode prices directly in frontend components.
+
+All prices, suppliers, margins, capacities, and rules must be editable through admin without changing code.
+
+Build the MVP in this order:
+
+1. Database and auth
+2. Admin product/supplier management
+3. Pricing engine
+4. Employee quote builder
+5. Customer event builder
+6. Quote approval
+7. Audit log
+8. Mobile polish
+
+Seed the system with example data so the full flow works immediately.

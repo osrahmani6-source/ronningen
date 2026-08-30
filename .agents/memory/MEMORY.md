@@ -1,0 +1,1 @@
+- [API and database compatibility](api-and-db-compatibility.md) — generated validation uses Zod 3-compatible numeric schemas; persist money as integer øre and map to NOK at the API boundary.
